@@ -21,15 +21,15 @@ import org.oneflow.spark.datasources.ofrecord.codec.{RowDecoder, RowEncoder}
 class OFRecordFileFormat extends FileFormat with DataSourceRegister with Logging with Serializable {
 
   override def inferSchema(
-      sparkSession: SparkSession,
-      options: Map[String, String],
-      files: Seq[FileStatus]): Option[StructType] = {
+                            sparkSession: SparkSession,
+                            options: Map[String, String],
+                            files: Seq[FileStatus]): Option[StructType] = {
     val rdd = sparkSession.sparkContext
       .newAPIHadoopFile(
         options("path"),
         classOf[OFRecordFileInputFormat],
         classOf[Void],
-        classOf[OFRecord])
+        classOf[Array[Byte]])
       .map(_._2)
     val limit = options
       .get("samplingLimit")
@@ -42,23 +42,23 @@ class OFRecordFileFormat extends FileFormat with DataSourceRegister with Logging
   }
 
   override def prepareWrite(
-      sparkSession: SparkSession,
-      job: Job,
-      options: Map[String, String],
-      dataSchema: StructType): OutputWriterFactory = new OutputWriterFactory {
+                             sparkSession: SparkSession,
+                             job: Job,
+                             options: Map[String, String],
+                             dataSchema: StructType): OutputWriterFactory = new OutputWriterFactory {
     override def getFileExtension(context: TaskAttemptContext): String = ".ofrecord"
 
     override def newInstance(
-        path: String,
-        dataSchema: StructType,
-        context: TaskAttemptContext): OutputWriter =
+                              path: String,
+                              dataSchema: StructType,
+                              context: TaskAttemptContext): OutputWriter =
       new OutputWriter {
         private val writer =
           new OFRecordRecordWriter(new Path(new URI(path)), context.getConfiguration)
 
         override def write(row: InternalRow): Unit = {
           val record = RowEncoder.encode(row, dataSchema)
-          writer.write(null, record)
+          writer.write(null, record.toByteArray)
         }
 
         override def close(): Unit = writer.close(context)
@@ -74,36 +74,35 @@ class OFRecordFileFormat extends FileFormat with DataSourceRegister with Logging
   override def equals(o: Any): Boolean = o.isInstanceOf[OFRecordFileFormat]
 
   override def isSplitable(
-      sparkSession: SparkSession,
-      options: Map[String, String],
-      path: Path): Boolean = false
+                            sparkSession: SparkSession,
+                            options: Map[String, String],
+                            path: Path): Boolean = false
 
   override def supportDataType(dataType: DataType, isReadPath: Boolean): Boolean = true
 
   override protected def buildReader(
-      sparkSession: SparkSession,
-      dataSchema: StructType,
-      partitionSchema: StructType,
-      requiredSchema: StructType,
-      filters: Seq[Filter],
-      options: Map[String, String],
-      hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
+                                      sparkSession: SparkSession,
+                                      dataSchema: StructType,
+                                      partitionSchema: StructType,
+                                      requiredSchema: StructType,
+                                      filters: Seq[Filter],
+                                      options: Map[String, String],
+                                      hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
     val broadcastedHadoopConf =
       sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
-    file: PartitionedFile =>
-      {
-        val fileSplit =
-          new FileSplit(new Path(new URI(file.filePath)), file.start, file.length, Array.empty)
-        val attemptId = new TaskAttemptID(new TaskID(new JobID(), TaskType.MAP, 0), 0)
-        val hadoopAttemptContext =
-          new TaskAttemptContextImpl(broadcastedHadoopConf.value.value, attemptId)
+    file: PartitionedFile => {
+      val fileSplit =
+        new FileSplit(new Path(new URI(file.filePath)), file.start, file.length, Array.empty)
+      val attemptId = new TaskAttemptID(new TaskID(new JobID(), TaskType.MAP, 0), 0)
+      val hadoopAttemptContext =
+        new TaskAttemptContextImpl(broadcastedHadoopConf.value.value, attemptId)
 
-        val reader =
-          new OFRecordFileInputFormat().createRecordReader(fileSplit, hadoopAttemptContext)
-        reader.initialize(fileSplit, hadoopAttemptContext)
-        new RecordReaderIterator(reader).map {
-          RowDecoder.decode(_, requiredSchema)
-        }
+      val reader =
+        new OFRecordFileInputFormat().createRecordReader(fileSplit, hadoopAttemptContext)
+      reader.initialize(fileSplit, hadoopAttemptContext)
+      new RecordReaderIterator(reader).map { bs =>
+        RowDecoder.decode(OFRecord.parseFrom(bs), requiredSchema)
       }
+    }
   }
 }

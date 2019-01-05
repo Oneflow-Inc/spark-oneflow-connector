@@ -10,12 +10,12 @@ object OFRecordInferSchema {
 
   def apply[T: TypeTag](rdd: RDD[T]): StructType = {
     typeOf[T] match {
-      case t if t =:= typeOf[OFRecord] =>
+      case t if t =:= typeOf[Array[Byte]] =>
         StructType(
           rdd
-            .asInstanceOf[RDD[OFRecord]]
-            .flatMap { r =>
-              r.feature.mapValues(inferField)
+            .asInstanceOf[RDD[Array[Byte]]]
+            .flatMap { bs =>
+              OFRecord.parseFrom(bs).feature.mapValues(inferField)
             }
             .reduceByKey {
               case (a, b) if a == b =>
@@ -23,22 +23,22 @@ object OFRecordInferSchema {
               case (BinaryType | StringType, BinaryType | StringType) =>
                 BinaryType
               case (
-                  dt @ ArrayType(BinaryType | StringType, _),
-                  ArrayType(BinaryType | StringType, _)) =>
+                dt@ArrayType(BinaryType | StringType, _),
+                ArrayType(BinaryType | StringType, _)) =>
                 dt.copy(elementType = BinaryType)
-              case (dt @ ArrayType(a @ (BinaryType | StringType), _), b @ (BinaryType | StringType))
-                  if a == BinaryType || b == BinaryType =>
+              case (dt@ArrayType(a@(BinaryType | StringType), _), b@(BinaryType | StringType))
+                if a == BinaryType || b == BinaryType =>
                 dt.copy(elementType = BinaryType)
-              case (a @ (BinaryType | StringType), dt @ ArrayType(b @ (BinaryType | StringType), _))
-                  if a == BinaryType || b == BinaryType =>
+              case (a@(BinaryType | StringType), dt@ArrayType(b@(BinaryType | StringType), _))
+                if a == BinaryType || b == BinaryType =>
                 dt.copy(elementType = BinaryType)
               case (
-                  dt @ ArrayType(a, _),
-                  b @ (IntegerType | FloatType | DoubleType | BinaryType | StringType)) if a == b =>
+                dt@ArrayType(a, _),
+                b@(IntegerType | FloatType | DoubleType | BinaryType | StringType)) if a == b =>
                 dt
               case (
-                  a @ (IntegerType | FloatType | DoubleType | BinaryType | StringType),
-                  dt @ ArrayType(b, _)) if a == b =>
+                a@(IntegerType | FloatType | DoubleType | BinaryType | StringType),
+                dt@ArrayType(b, _)) if a == b =>
                 dt
               case _ =>
                 throw new RuntimeException()
@@ -62,8 +62,8 @@ object OFRecordInferSchema {
     (feature.kind.number match {
       case Feature.BYTES_LIST_FIELD_NUMBER =>
         if (feature.getBytesList.value.forall {
-            _.toByteArray.forall(isPrintable)
-          }) {
+          _.toByteArray.forall(isPrintable)
+        }) {
           (StringType, feature.getBytesList.value.size)
         } else {
           (BinaryType, feature.getBytesList.value.size)

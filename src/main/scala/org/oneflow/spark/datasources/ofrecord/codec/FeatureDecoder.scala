@@ -49,14 +49,14 @@ object FloatListFeatureDecoder extends ListFeatureDecoder[Float](Feature.FLOAT_L
 object FloatFeatureDecoder extends SingleFeatureDecoder[Float](FloatListFeatureDecoder)
 
 object DoubleListFeatureDecoder
-    extends ListFeatureDecoder[Double](Feature.DOUBLE_LIST_FIELD_NUMBER) {
+  extends ListFeatureDecoder[Double](Feature.DOUBLE_LIST_FIELD_NUMBER) {
   override def toSeq(feature: Feature): Seq[Double] = feature.getDoubleList.value
 }
 
 object DoubleFeatureDecoder extends SingleFeatureDecoder[Double](DoubleListFeatureDecoder)
 
 object DecimalListFeatureDecoder
-    extends ListFeatureDecoder[Decimal](Feature.FLOAT_LIST_FIELD_NUMBER) {
+  extends ListFeatureDecoder[Decimal](Feature.FLOAT_LIST_FIELD_NUMBER) {
   override def toSeq(feature: Feature): Seq[Decimal] = feature.getFloatList.value.map {
     Decimal(_)
   }
@@ -65,7 +65,7 @@ object DecimalListFeatureDecoder
 object DecimalFeatureDecoder extends SingleFeatureDecoder[Decimal](DecimalListFeatureDecoder)
 
 object BinaryListFeatureDecoder
-    extends ListFeatureDecoder[Array[Byte]](Feature.BYTES_LIST_FIELD_NUMBER) {
+  extends ListFeatureDecoder[Array[Byte]](Feature.BYTES_LIST_FIELD_NUMBER) {
   override def toSeq(feature: Feature): Seq[Array[Byte]] =
     feature.getBytesList.value.map(_.asScala.map {
       _.toByte
@@ -75,9 +75,9 @@ object BinaryListFeatureDecoder
 object BinaryFeatureDecoder extends SingleFeatureDecoder[Array[Byte]](BinaryListFeatureDecoder)
 
 object StringListFeatureDecoder
-    extends ListFeatureDecoder[UTF8String](Feature.BYTES_LIST_FIELD_NUMBER) {
+  extends ListFeatureDecoder[UTF8String](Feature.BYTES_LIST_FIELD_NUMBER) {
   override def toSeq(feature: Feature): Seq[UTF8String] = feature.getBytesList.value.map { bs =>
-    UTF8String.fromBytes(bs.toByteArray)
+    UTF8String.fromString(bs.toStringUtf8)
   }
 }
 

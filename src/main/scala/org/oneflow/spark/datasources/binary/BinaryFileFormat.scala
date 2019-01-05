@@ -16,9 +16,9 @@ import org.oneflow.spark.datasources.SerializableConfiguration
 class BinaryFileFormat extends FileFormat with DataSourceRegister with Logging with Serializable {
 
   override def inferSchema(
-      sparkSession: SparkSession,
-      options: Map[String, String],
-      files: Seq[FileStatus]): Option[StructType] = {
+                            sparkSession: SparkSession,
+                            options: Map[String, String],
+                            files: Seq[FileStatus]): Option[StructType] = {
     Some(
       StructType(
         Seq(
@@ -28,10 +28,10 @@ class BinaryFileFormat extends FileFormat with DataSourceRegister with Logging w
   }
 
   override def prepareWrite(
-      sparkSession: SparkSession,
-      job: Job,
-      options: Map[String, String],
-      dataSchema: StructType): OutputWriterFactory = ???
+                             sparkSession: SparkSession,
+                             job: Job,
+                             options: Map[String, String],
+                             dataSchema: StructType): OutputWriterFactory = ???
 
   override def shortName(): String = "binary"
 
@@ -44,27 +44,26 @@ class BinaryFileFormat extends FileFormat with DataSourceRegister with Logging w
   override def supportDataType(dataType: DataType, isReadPath: Boolean): Boolean = true
 
   override protected def buildReader(
-      sparkSession: SparkSession,
-      dataSchema: StructType,
-      partitionSchema: StructType,
-      requiredSchema: StructType,
-      filters: Seq[Filter],
-      options: Map[String, String],
-      hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
+                                      sparkSession: SparkSession,
+                                      dataSchema: StructType,
+                                      partitionSchema: StructType,
+                                      requiredSchema: StructType,
+                                      filters: Seq[Filter],
+                                      options: Map[String, String],
+                                      hadoopConf: Configuration): PartitionedFile => Iterator[InternalRow] = {
     val broadcastedHadoopConf =
       sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
-    file: PartitionedFile =>
-      {
-        val path = file.filePath
-        val stream = FileSystem.get(broadcastedHadoopConf.value.value).open(new Path(path))
-        val bytes = try {
-          ByteStreams.toByteArray(stream)
-        } finally {
-          Closeables.close(stream, true)
-        }
-        Iterator.single().map { _ =>
-          InternalRow(UTF8String.fromString(path), bytes)
-        }
+    file: PartitionedFile => {
+      val path = file.filePath
+      val stream = FileSystem.get(broadcastedHadoopConf.value.value).open(new Path(path))
+      val bytes = try {
+        ByteStreams.toByteArray(stream)
+      } finally {
+        Closeables.close(stream, true)
       }
+      Iterator.single().map { _ =>
+        InternalRow(UTF8String.fromString(path), bytes)
+      }
+    }
   }
 }

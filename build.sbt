@@ -18,7 +18,8 @@ PB.targets in Compile := Seq(
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-common" % versions.hadoop % "provided" exclude ("com.google.protobuf", "protobuf-java"),
   "org.apache.hadoop" % "hadoop-mapreduce-client-core" % versions.hadoop % "provided" exclude ("com.google.protobuf", "protobuf-java"),
-  "org.apache.spark" %% "spark-sql" % versions.spark % "provided"
+  "org.apache.spark" %% "spark-sql" % versions.spark % "provided" exclude ("com.google.protobuf", "protobuf-java"),
+  "org.apache.spark" %% "spark-mllib" % versions.spark % "provided" exclude ("com.google.protobuf", "protobuf-java")
 )
 
 assemblyShadeRules in assembly := Seq(

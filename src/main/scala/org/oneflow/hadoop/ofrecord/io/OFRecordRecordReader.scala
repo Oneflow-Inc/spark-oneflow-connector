@@ -3,18 +3,17 @@ package org.oneflow.hadoop.ofrecord.io
 import java.io.EOFException
 import java.nio.{ByteBuffer, ByteOrder}
 
-import oneflow.record.OFRecord
 import org.apache.hadoop.fs.FSDataInputStream
 import org.apache.hadoop.mapreduce.lib.input.FileSplit
 import org.apache.hadoop.mapreduce.{InputSplit, RecordReader, TaskAttemptContext}
 
 import scala.util.{Failure, Success, Try}
 
-class OFRecordRecordReader extends RecordReader[Void, OFRecord] {
+class OFRecordRecordReader extends RecordReader[Void, Array[Byte]] {
 
   private var inputStreamOption: Option[FSDataInputStream] = None
   private var progress: Option[Long => Float] = None
-  private var current: Option[OFRecord] = None
+  private var current: Option[Array[Byte]] = None
 
   private val headerBytes = new Array[Byte](8)
   private val headerLengthBuffer =
@@ -44,7 +43,7 @@ class OFRecordRecordReader extends RecordReader[Void, OFRecord] {
       case Success(l) =>
         val content = new Array[Byte](l.toInt)
         inputStream.readFully(content)
-        Some(OFRecord.parseFrom(content))
+        Some(content)
       case Failure(_: EOFException) =>
         None
       case Failure(e) => throw e
@@ -54,7 +53,7 @@ class OFRecordRecordReader extends RecordReader[Void, OFRecord] {
 
   override def getCurrentKey: Void = null
 
-  override def getCurrentValue: OFRecord = current.get
+  override def getCurrentValue: Array[Byte] = current.get
 
   override def getProgress: Float = {
     progress.get(inputStream.getPos)

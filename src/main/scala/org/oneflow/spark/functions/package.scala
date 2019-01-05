@@ -1,12 +1,10 @@
 package org.oneflow.spark
 
-import oneflow.record.OFRecord
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, DataFrameReader, DataFrameWriter, Row}
-import org.oneflow.hadoop.ofrecord.io.{OFRecordFileInputFormat, OFRecordFileOutputFormat}
+import org.apache.spark.sql._
+import org.oneflow.spark.datasources.SerializableConfiguration
 
 package object functions {
 
@@ -26,6 +24,12 @@ package object functions {
 
     def binary(path: String*): DataFrame = underlay.binary().load(path: _*)
 
+    def chunk(): DataFrameReader = underlay.format("chunk")
+
+    def chunk(path: String): DataFrame = underlay.chunk().load(path)
+
+    def chunk(path: String*): DataFrame = underlay.chunk().load(path: _*)
+
   }
 
   implicit class RichDataFrameWriter(underlay: DataFrameWriter[Row]) {
@@ -33,6 +37,10 @@ package object functions {
     def ofrecord(): DataFrameWriter[Row] = underlay.format("ofrecord")
 
     def ofrecord(path: String): Unit = underlay.ofrecord().save(path)
+
+    def chunk(): DataFrameWriter[Row] = underlay.format("chunk")
+
+    def chunk(path: String): Unit = underlay.chunk().save(path)
 
   }
 
@@ -45,12 +53,6 @@ package object functions {
   }
 
   implicit class RichSparkContext(underlay: SparkContext) extends Logging {
-
-    def ofRecordFile(path: String): RDD[OFRecord] = {
-      underlay
-        .newAPIHadoopFile(path, classOf[OFRecordFileInputFormat], classOf[Void], classOf[OFRecord])
-        .map(_._2)
-    }
 
     def formatFilenameAsOneflowStyle(path: String): Unit = {
       val fs = FileSystem.get(underlay.hadoopConfiguration)
@@ -87,17 +89,35 @@ package object functions {
     }
   }
 
-  implicit class RichOFRecordRDD(underlay: RDD[OFRecord]) {
-    def saveAsOFRecordFile(path: String): Unit = {
-      underlay
-        .map {
-          (null, _)
+  implicit class RichBinaryDataset(underlay: Dataset[(String, Array[Byte])]) {
+    def saveBinaryToFile(base: String): Unit = {
+      val sc = underlay.sparkSession.sparkContext
+      val broadcastHadoopConf = sc.broadcast(new SerializableConfiguration(sc.hadoopConfiguration))
+
+      {
+        val basePath = new Path(base)
+        val fs = FileSystem.get(broadcastHadoopConf.value.value)
+        if (fs.exists(basePath)) {
+          require(fs.isDirectory(basePath) && fs.listStatus(basePath).isEmpty)
+        } else {
+          fs.mkdirs(basePath)
         }
-        .saveAsNewAPIHadoopFile(
-          path,
-          classOf[Void],
-          classOf[OFRecord],
-          classOf[OFRecordFileOutputFormat])
+      }
+      val broadcastBase = sc.broadcast(base)
+      underlay.rdd.foreachPartition {
+        _.foreach {
+          case (name, data) =>
+            val fs = FileSystem.get(broadcastHadoopConf.value.value)
+            val path = Path.mergePaths(new Path(broadcastBase.value), new Path(name))
+            val os = fs.create(path, false)
+            try {
+              os.write(data)
+            } finally {
+              os.close()
+            }
+        }
+      }
     }
   }
+
 }
