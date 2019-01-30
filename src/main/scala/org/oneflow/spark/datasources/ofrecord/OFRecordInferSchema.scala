@@ -77,7 +77,7 @@ object OFRecordInferSchema {
       case _ =>
         throw new RuntimeException("unsupported type ...")
     }) match {
-      case (dt, 0 | 1) => dt
+      case (dt, 1) => dt
       case (dt, _) => ArrayType(dt)
     }
   }
