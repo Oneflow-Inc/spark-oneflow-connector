@@ -54,15 +54,15 @@ class BinaryFileFormat extends FileFormat with DataSourceRegister with Logging w
     val broadcastedHadoopConf =
       sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
     file: PartitionedFile => {
-      val path = file.filePath
-      val stream = FileSystem.get(broadcastedHadoopConf.value.value).open(new Path(path))
+      val path = new Path(file.filePath)
+      val stream = path.getFileSystem(broadcastedHadoopConf.value.value).open(path)
       val bytes = try {
         ByteStreams.toByteArray(stream)
       } finally {
         Closeables.close(stream, true)
       }
       Iterator.single().map { _ =>
-        InternalRow(UTF8String.fromString(path), bytes)
+        InternalRow(UTF8String.fromString(file.filePath), bytes)
       }
     }
   }

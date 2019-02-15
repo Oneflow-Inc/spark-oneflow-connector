@@ -55,9 +55,10 @@ package object functions {
   implicit class RichSparkContext(underlay: SparkContext) extends Logging {
 
     def formatFilenameAsOneflowStyle(path: String): Unit = {
-      val fs = FileSystem.get(underlay.hadoopConfiguration)
+      val hadoopPath =  new Path(path)
+      val fs = hadoopPath.getFileSystem(underlay.hadoopConfiguration)
       val dir = {
-        val files = fs.globStatus(new Path(path))
+        val files = fs.globStatus(hadoopPath)
         require(files.length == 1)
         require(files.head.isDirectory)
         files.head
@@ -96,7 +97,7 @@ package object functions {
 
       {
         val basePath = new Path(base)
-        val fs = FileSystem.get(broadcastHadoopConf.value.value)
+        val fs = basePath.getFileSystem(broadcastHadoopConf.value.value)
         if (fs.exists(basePath)) {
           require(fs.isDirectory(basePath) && fs.listStatus(basePath).isEmpty)
         } else {
@@ -105,10 +106,11 @@ package object functions {
       }
       val broadcastBase = sc.broadcast(base)
       underlay.rdd.foreachPartition {
+
         _.foreach {
           case (name, data) =>
-            val fs = FileSystem.get(broadcastHadoopConf.value.value)
             val path = Path.mergePaths(new Path(broadcastBase.value), new Path(name))
+            val fs = path.getFileSystem(broadcastHadoopConf.value.value)
             val os = fs.create(path, false)
             try {
               os.write(data)
