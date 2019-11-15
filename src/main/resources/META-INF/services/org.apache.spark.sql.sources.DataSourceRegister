@@ -1,3 +1,4 @@
 org.oneflow.spark.datasources.ofrecord.OFRecordFileFormat
 org.oneflow.spark.datasources.binary.BinaryFileFormat
 org.oneflow.spark.datasources.chunk.ChunkFileFormat
+org.oneflow.spark.datasources.onerec.OneRecFileFormat
