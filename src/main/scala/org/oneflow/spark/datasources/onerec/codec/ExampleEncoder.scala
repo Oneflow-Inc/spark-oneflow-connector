@@ -7,8 +7,11 @@ import onerec._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{FloatType, StructType, _}
 
-object ExampleEncoder {
-  def encode(row: InternalRow, schema: StructType, sortedKeys: Seq[(String, Int)]): Array[Byte] = {
+class ExampleEncoder(schema: StructType) {
+
+  private val sortedKeys: Seq[(String, Int)] = schema.map { _.name }.zipWithIndex.sortBy(_._1)
+
+  def encode(row: InternalRow): Array[Byte] = {
     val builder = new FlatBufferBuilder
     val features = sortedKeys.map {
       case (key, idx) =>

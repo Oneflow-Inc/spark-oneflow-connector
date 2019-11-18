@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % versions.spark % "provided" exclude ("com.google.protobuf", "protobuf-java"),
   "org.apache.spark" %% "spark-mllib" % versions.spark % "provided" exclude ("com.google.protobuf", "protobuf-java"),
   "com.google.flatbuffers" % "flatbuffers-java" % "1.11.0-SNAPSHOT",
-  "org.oneflow" % "onerec-flatbuffers-java" % "0.1-SNAPSHOT"
+  "org.oneflow" % "onerec-flatbuffers-java" % "0.1-SNAPSHOT",
+  "org.lz4" % "lz4-java" % "1.6.0"
 )
 
 //libraryDependencies ++= Seq(

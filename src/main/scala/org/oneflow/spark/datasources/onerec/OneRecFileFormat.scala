@@ -27,8 +27,6 @@ class OneRecFileFormat extends FileFormat with DataSourceRegister with Logging w
       options: Map[String, String],
       dataSchema: StructType): OutputWriterFactory = new OutputWriterFactory {
 
-    private val sortedKeys:Seq[(String, Int)] = dataSchema.map{_.name}.zipWithIndex.sortBy(_._1)
-
     override def getFileExtension(context: TaskAttemptContext): String = ".onerec"
 
     override def newInstance(
@@ -36,11 +34,14 @@ class OneRecFileFormat extends FileFormat with DataSourceRegister with Logging w
         dataSchema: StructType,
         context: TaskAttemptContext): OutputWriter =
       new OutputWriter {
+
+        private val encoder = new ExampleEncoder(dataSchema)
+
         private val writer =
           new OneRecRecordWriter(new Path(new URI(path)), context.getConfiguration)
 
         override def write(row: InternalRow): Unit = {
-          val bytes = ExampleEncoder.encode(row, dataSchema, sortedKeys)
+          val bytes = encoder.encode(row)
           writer.write(null, bytes)
         }
 
