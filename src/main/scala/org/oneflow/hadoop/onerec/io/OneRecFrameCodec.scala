@@ -90,7 +90,7 @@ class OneRecFrameCodec {
       os.write(headerBytes)
       os.write(content, off, len)
       os.write(padBytes, 0, OneRecFrameCodec.getPadSize(len))
-      checksumBuffer.reset()
+      checksumBuffer.clear()
       checksumBuffer.putLong(OneRecFrameCodec.hash64.hash(ByteBuffer.wrap(content), 0))
       os.write(checksumBytes)
     }
@@ -156,7 +156,7 @@ class OneRecFrameCodec {
               readFully(checksumBytes)
             }
             .flatMap { _ =>
-              checksumBuffer.reset()
+              checksumBuffer.clear()
               if (checksumBuffer.getLong == OneRecFrameCodec.hash64
                   .hash(ByteBuffer.wrap(content), 0)) Success()
               else Failure(OneRecFrameParseException)
