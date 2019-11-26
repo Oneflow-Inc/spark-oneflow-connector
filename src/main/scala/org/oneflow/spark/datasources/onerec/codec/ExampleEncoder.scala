@@ -123,7 +123,7 @@ class ExampleEncoder(schema: StructType) {
   }
 
   private val sortedTensorBuilder: Array[(String, TensorBuilder)] =
-    schema.fields.sortBy { _.name }.zipWithIndex.map {
+    schema.fields.zipWithIndex.sortBy { _._1.name }.map {
       case (field, ordinal) =>
         val tensorBuilder = field.dataType match {
           case ArrayType(BooleanType, _) =>
