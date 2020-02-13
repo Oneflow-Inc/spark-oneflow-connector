@@ -8,14 +8,7 @@ trait FeatureEncoder[T] {
 }
 
 object Int64ListFeatureEncoder extends FeatureEncoder[Seq[Long]] {
-  override def encode(value: Seq[Long]): Feature = {
-    require(value.forall({ v =>
-      v <= Int.MaxValue && v >= Int.MinValue
-    }))
-    Feature().withInt32List(Int32List(value.map {
-      _.toInt
-    }))
-  }
+  override def encode(value: Seq[Long]): Feature = Feature().withInt64List(Int64List(value))
 }
 
 object Int32ListFeatureEncoder extends FeatureEncoder[Seq[Int]] {

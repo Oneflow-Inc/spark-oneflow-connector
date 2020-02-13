@@ -70,6 +70,8 @@ object OFRecordInferSchema {
         }
       case Feature.INT32_LIST_FIELD_NUMBER =>
         (IntegerType, feature.getInt32List.value.size)
+      case Feature.INT64_LIST_FIELD_NUMBER =>
+        (LongType, feature.getInt64List.value.size)
       case Feature.FLOAT_LIST_FIELD_NUMBER =>
         (FloatType, feature.getFloatList.value.size)
       case Feature.DOUBLE_LIST_FIELD_NUMBER =>
