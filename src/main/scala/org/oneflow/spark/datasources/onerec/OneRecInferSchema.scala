@@ -2,7 +2,7 @@ package org.oneflow.spark.datasources.onerec
 
 import java.nio.ByteBuffer
 
-import onerec.{Example, TensorData}
+import onerec.example.{Example, TensorData}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types._
 

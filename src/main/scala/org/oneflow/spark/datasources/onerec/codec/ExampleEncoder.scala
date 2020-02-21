@@ -2,8 +2,8 @@ package org.oneflow.spark.datasources.onerec.codec
 
 import java.nio.ByteBuffer
 
-import com.google.flatbuffers.FlatBufferBuilder
-import onerec._
+import org.oneflow.onerec.flatbuffers.FlatBufferBuilder
+import onerec.example._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.SpecializedGetters
 import org.apache.spark.sql.types._

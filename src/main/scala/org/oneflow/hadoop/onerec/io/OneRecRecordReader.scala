@@ -5,8 +5,9 @@ import java.io.EOFException
 import org.apache.hadoop.fs.FSDataInputStream
 import org.apache.hadoop.mapreduce.lib.input.FileSplit
 import org.apache.hadoop.mapreduce.{InputSplit, RecordReader, TaskAttemptContext}
+import org.oneflow.onerec.io.OneRecFrameReader
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 class OneRecRecordReader extends RecordReader[Void, Array[Byte]] {
 
@@ -29,14 +30,13 @@ class OneRecRecordReader extends RecordReader[Void, Array[Byte]] {
       path
         .getFileSystem(context.getConfiguration)
         .open(path, OneRecIOConf.IO_BUFFER_SIZE))
-    oneRecFrameReaderOption = Some(new OneRecFrameCodec().newReader(inputStreamOption.get))
+
+    oneRecFrameReaderOption = Some(new OneRecFrameReader(inputStreamOption.get))
   }
 
   override def nextKeyValue(): Boolean = {
-    current = oneRecFrameReader.readFrame() match {
-      case Success(content) => Some(content)
-      case Failure(_: EOFException) =>
-        None
+    current = Try{Option(oneRecFrameReader.read())} match {
+      case Success(payload) => payload
       case Failure(e) => throw e
     }
     current.isDefined

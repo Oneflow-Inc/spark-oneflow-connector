@@ -1,8 +1,8 @@
 package org.oneflow.spark.datasources.onerec.codec
 
-import java.nio.ByteBuffer
+import java.nio.{ByteBuffer, ByteOrder}
 
-import onerec._
+import onerec.example._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -26,28 +26,40 @@ class ExampleDecoder(schema: StructType) {
           val elementCount = 0.until(tensor.shapeLength()).map {
             tensor.shape
           } match {
-            case xs if xs.nonEmpty => Some(xs.sum)
+            case xs if xs.nonEmpty => Some(xs.product)
             case _ => None
           }
           val decoded = tensor.dataType() match {
             case TensorData.Int8List =>
               val list = tensor.data(new Int8List).asInstanceOf[Int8List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val buf = new Array[Byte](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.Int16List =>
               val list = tensor.data(new Int16List).asInstanceOf[Int16List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val buf = new Array[Short](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.Int32List =>
               val list = tensor.data(new Int32List).asInstanceOf[Int32List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val buf = new Array[Int](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.Int64List =>
-              val list = tensor.data(new Int32List).asInstanceOf[Int64List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val list = tensor.data(new Int64List).asInstanceOf[Int64List]
+              val buf = new Array[Long](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).asLongBuffer().get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.Float32List =>
               val list = tensor.data(new Float32List).asInstanceOf[Float32List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val buf = new Array[Float](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.Float64List =>
               val list = tensor.data(new Float64List).asInstanceOf[Float64List]
-              ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
+              val buf = new Array[Double](list.valuesLength())
+              list.valuesAsByteBuffer().order(ByteOrder.LITTLE_ENDIAN).asDoubleBuffer().get(buf)
+              ArrayData.toArrayData(buf)
             case TensorData.StringList =>
               val list = tensor.data(new StringList).asInstanceOf[StringList]
               ArrayData.toArrayData(0.until(list.valuesLength()).map { list.values })
@@ -58,7 +70,7 @@ class ExampleDecoder(schema: StructType) {
               })
           }
           elementCount.foreach { cnt =>
-            assert(decoded.array.length == cnt)
+            assert(decoded.numElements() == cnt)
           }
           decoded
       }

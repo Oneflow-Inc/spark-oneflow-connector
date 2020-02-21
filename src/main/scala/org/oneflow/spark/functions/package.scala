@@ -30,6 +30,12 @@ package object functions {
 
     def chunk(path: String*): DataFrame = underlay.chunk().load(path: _*)
 
+    def onerec(): DataFrameReader = underlay.format("onerec")
+
+    def onerec(path: String): DataFrame = underlay.onerec().load(path)
+
+    def onerec(path: String*): DataFrame = underlay.onerec().load(path: _*)
+
   }
 
   implicit class RichDataFrameWriter(underlay: DataFrameWriter[Row]) {
@@ -41,6 +47,10 @@ package object functions {
     def chunk(): DataFrameWriter[Row] = underlay.format("chunk")
 
     def chunk(path: String): Unit = underlay.chunk().save(path)
+
+    def onerec(): DataFrameWriter[Row] = underlay.format("onerec")
+
+    def onerec(path: String): Unit = underlay.onerec().save(path)
 
   }
 
@@ -55,7 +65,7 @@ package object functions {
   implicit class RichSparkContext(underlay: SparkContext) extends Logging {
 
     def formatFilenameAsOneflowStyle(path: String): Unit = {
-      val hadoopPath =  new Path(path)
+      val hadoopPath = new Path(path)
       val fs = hadoopPath.getFileSystem(underlay.hadoopConfiguration)
       val dir = {
         val files = fs.globStatus(hadoopPath)
