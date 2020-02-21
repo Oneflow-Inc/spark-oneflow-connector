@@ -103,7 +103,7 @@ class OneRecFileFormat extends FileFormat with DataSourceRegister with Logging w
         val reader =
           new OneRecFileInputFormat().createRecordReader(fileSplit, hadoopAttemptContext)
         reader.initialize(fileSplit, hadoopAttemptContext)
-        val decode = new ExampleDecoder(dataSchema)
+        val decode = new ExampleDecoder(requiredSchema)
         new RecordReaderIterator(reader).map { bs =>
           decode.decode(bs)
         }
