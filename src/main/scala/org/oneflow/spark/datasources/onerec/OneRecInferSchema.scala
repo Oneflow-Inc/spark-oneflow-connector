@@ -46,8 +46,9 @@ object OneRecInferSchema {
             .reduceByKey {
               case (a, b) if a == b =>
                 a
-              case _ =>
-                throw new RuntimeException()
+              case (a, b) =>
+                throw new RuntimeException(
+                  s"different type ${a.elementType} ${b.elementType} with same key")
             }
             .collect()
             .sortBy(_._1)
