@@ -34,10 +34,10 @@ object OFRecordInferSchema {
                 dt.copy(elementType = BinaryType)
               case (
                 dt@ArrayType(a, _),
-                b@(IntegerType | FloatType | DoubleType | BinaryType | StringType)) if a == b =>
+                b@(IntegerType | LongType | FloatType | DoubleType | BinaryType | StringType)) if a == b =>
                 dt
               case (
-                a@(IntegerType | FloatType | DoubleType | BinaryType | StringType),
+                a@(IntegerType | LongType | FloatType | DoubleType | BinaryType | StringType),
                 dt@ArrayType(b, _)) if a == b =>
                 dt
               case _ =>
