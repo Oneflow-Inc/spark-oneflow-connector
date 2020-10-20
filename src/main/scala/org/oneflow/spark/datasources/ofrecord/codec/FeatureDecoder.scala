@@ -34,8 +34,8 @@ object IntListFeatureDecoder extends ListFeatureDecoder[Int](Feature.INT32_LIST_
 
 object IntFeatureDecoder extends SingleFeatureDecoder[Int](IntListFeatureDecoder)
 
-object LongListFeatureDecoder extends ListFeatureDecoder[Long](Feature.INT32_LIST_FIELD_NUMBER) {
-  override def toSeq(feature: Feature): Seq[Long] = feature.getInt32List.value.map {
+object LongListFeatureDecoder extends ListFeatureDecoder[Long](Feature.INT64_LIST_FIELD_NUMBER) {
+  override def toSeq(feature: Feature): Seq[Long] = feature.getInt64List.value.map {
     _.toLong
   }
 }
