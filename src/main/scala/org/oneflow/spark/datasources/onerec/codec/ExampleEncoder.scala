@@ -228,7 +228,8 @@ class ExampleEncoder(schema: StructType) {
                 builder.createString(ByteBuffer.wrap(name.getBytes("UTF-8"))),
                 creator(builder, row))
           }
-        )
+        ),
+        0
       )
     )
     builder.sizedByteArray()
