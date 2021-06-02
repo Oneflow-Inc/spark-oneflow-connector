@@ -41,8 +41,6 @@ class BinaryFileFormat extends FileFormat with DataSourceRegister with Logging w
 
   override def equals(o: Any): Boolean = o.isInstanceOf[BinaryFileFormat]
 
-  override def supportDataType(dataType: DataType, isReadPath: Boolean): Boolean = true
-
   override protected def buildReader(
                                       sparkSession: SparkSession,
                                       dataSchema: StructType,

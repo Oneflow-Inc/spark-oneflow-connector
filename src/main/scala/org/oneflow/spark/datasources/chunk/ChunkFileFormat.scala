@@ -64,8 +64,6 @@ class ChunkFileFormat extends FileFormat with DataSourceRegister with Logging wi
       options: Map[String, String],
       path: Path): Boolean = false
 
-  override def supportDataType(dataType: DataType, isReadPath: Boolean): Boolean = true
-
   override protected def buildReader(
       sparkSession: SparkSession,
       dataSchema: StructType,

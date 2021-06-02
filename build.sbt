@@ -1,14 +1,14 @@
 name := "spark-oneflow-connector"
 
-version := "0.1.2"
+version := "0.2.0"
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.12.14"
 
 organization := "org.oneflow"
 
 lazy val versions = new {
   val hadoop = "2.7.0"
-  val spark = "2.4.0"
+  val spark = "3.1.1"
 }
 
 PB.targets in Compile := Seq(
